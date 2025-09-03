@@ -1,20 +1,36 @@
+ï»¿from __future__ import annotations
+import os
+from datetime import datetime
 from fastapi import FastAPI
-from app.core.config import settings
-from app.routers import health, finance, haru_course
-from app.db import init_db
+from app.services.json_store import JsonStore
+from app.schemas.health import Health
 
-app = FastAPI(title="Ameth", version="0.1.0")
+SERVICE = "ameth"
+VERSION = "v1.1"
 
-app.include_router(health.router, prefix="")
-app.include_router(finance.router, prefix="/finance", tags=["finance"])
+DATA_DIR = os.getenv("DATA_DIR", "./data")
+store = JsonStore(DATA_DIR)
 
-@app.on_event("startup")
-def on_startup():
-    init_db()
-# (verifica que ya esté; si no, se agrega)
+app = FastAPI(title="Ameth API", version=VERSION)
 
-# (verifica que ya esté; si no, se agrega)
+# guardar store en app.state para acceder desde routers (evita import circular)
+app.state.store = store
 
-from app.routers import health, finance, haru_course
-app.include_router(haru_course.router, prefix="/haru", tags=["haru-course"])
-app.include_router(haru_course.router, prefix="/haru", tags=["haru-course"])
+# Routers
+from app.routers.finance import router as finance_router
+from app.routers.haru import router as haru_router
+from app.routers.mode import router as mode_router
+from app.routers.phrase import router as phrase_router
+
+app.include_router(finance_router)
+app.include_router(haru_router)
+app.include_router(mode_router)
+app.include_router(phrase_router)
+
+@app.get("/health", response_model=Health)
+def health():
+    return Health(status="ok", service=SERVICE, version=VERSION, now=datetime.now())
+
+@app.get("/version")
+def version():
+    return {"service": SERVICE, "version": VERSION}
