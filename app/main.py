@@ -1,32 +1,28 @@
-﻿from datetime import datetime, timezone
-from fastapi import FastAPI
-from app.schemas.health import Health
+﻿from fastapi import FastAPI
+from datetime import datetime
+import os
 
-# Routers (estos routers ya tienen prefix interno)
-from app.routers.finance import router as finance_router
-from app.routers.haru import router as haru_router
-from app.routers.mode import router as mode_router
-from app.routers.phrase import router as phrase_router
+from app.diag_routes import router as diag_router
+from app.finance_routes import router as finance_router
 
-APP_VERSION = "v1.1"
+app = FastAPI(title="Ameth API", version=os.getenv("AMETH_VERSION", "v1"))
 
-app = FastAPI(title="Ameth API", version=APP_VERSION)
-
-@app.get("/health", response_model=Health, tags=["meta"])
+@app.get("/health")
 def health():
     return {
         "status": "ok",
         "service": "ameth",
-        "version": APP_VERSION,
-        "now": datetime.now(timezone.utc),
+        "version": os.getenv("AMETH_VERSION", "v1"),
+        "now": datetime.utcnow().isoformat() + "Z",
     }
 
-@app.get("/version", tags=["meta"])
+@app.get("/version")
 def version():
-    return {"service": "ameth", "version": APP_VERSION}
+    return {
+        "version": os.getenv("AMETH_VERSION", "v1"),
+        "data_dir": os.getenv("AMETH_DATA_DIR", "/data"),
+    }
 
-# 👇 OJO: montamos sin prefix aquí, porque cada router ya tiene su propio prefix
-app.include_router(finance_router)
-app.include_router(haru_router)
-app.include_router(mode_router)
-app.include_router(phrase_router)
+# Rutas
+app.include_router(diag_router)       # /diag
+app.include_router(finance_router)    # /finance/*
