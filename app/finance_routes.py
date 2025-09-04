@@ -24,13 +24,20 @@ class RecordIn(BaseModel):
 
 @router.post("/record")
 def record_item(item: RecordIn) -> Dict[str, Any]:
-    # Log mínimo
-    print(f"[FINANCE][RECORD] {item.model_dump()}", flush=True)
+    """
+    Forzamos serialización segura: fecha -> ISO y monto_clp -> int.
+    Evita 'Object of type date is not JSON serializable'.
+    """
+    # dict plano desde Pydantic
+    rec = item.model_dump()
+    # normalizaciones explícitas
+    rec["fecha"] = item.fecha.isoformat()          # "YYYY-MM-DD"
+    rec["monto_clp"] = int(item.monto_clp)         # asegurar int puro
 
-    # Cargar, agregar registro serializado a JSON y guardar
+    print(f"[FINANCE][RECORD] {rec}", flush=True)
+
     data: List[Dict[str, Any]] = load_finance()
-    # Pydantic v2: mode="json" convierte date -> "YYYY-MM-DD"
-    data.append(item.model_dump(mode="json"))
+    data.append(rec)
     save_finance(data)
     return {"ok": True}
 
@@ -42,7 +49,6 @@ def list_items() -> Dict[str, Any]:
 
 @router.get("/summary")
 def summary(month: str = Query(..., description="Formato YYYY-MM")) -> Dict[str, Any]:
-    """Resumen mensual: suma gastos/ingresos y neto para YYYY-MM."""
     if len(month) != 7 or month[4] != "-":
         raise HTTPException(status_code=400, detail="Formato de mes inválido. Use YYYY-MM")
 
