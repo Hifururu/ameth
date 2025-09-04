@@ -13,5 +13,5 @@ if ! touch "$AMETH_DATA_DIR/__w" 2>/dev/null; then
 fi
 rm -f "$AMETH_DATA_DIR/__w" || true
 
-# Lanza la API (módulo y objeto FastAPI: app.main:app)
+# Lanza la API (m??dulo y objeto FastAPI: app.main:app)
 exec uvicorn app.main:app --host "${HOST:-0.0.0.0}" --port "${PORT:-8080}" --proxy-headers
