@@ -1,10 +1,14 @@
 #!/usr/bin/env sh
 set -eu
 
-# Asegura ruta de datos y prueba de escritura
 : "${AMETH_DATA_DIR:=/data}"
+: "${HOST:=0.0.0.0}"
+: "${PORT:=8080}"
+: "${APP_MODULE:=app.main:app}"  # <- puedes sobreescribirlo en Northflank si tu app es distinta
+
 mkdir -p "$AMETH_DATA_DIR" || true
 
+# Test de escritura (para fallar r??pido si no hay permisos)
 if ! touch "$AMETH_DATA_DIR/__w" 2>/dev/null; then
   echo "ERROR: $AMETH_DATA_DIR no es escribible" >&2
   ls -ld "$AMETH_DATA_DIR" || true
@@ -13,5 +17,5 @@ if ! touch "$AMETH_DATA_DIR/__w" 2>/dev/null; then
 fi
 rm -f "$AMETH_DATA_DIR/__w" || true
 
-# Lanza la API (m??dulo y objeto FastAPI: app.main:app)
-exec uvicorn app.main:app --host "${HOST:-0.0.0.0}" --port "${PORT:-8080}" --proxy-headers
+# Lanza Uvicorn con el m??dulo que corresponda
+exec uvicorn "$APP_MODULE" --host "$HOST" --port "$PORT" --proxy-headers
