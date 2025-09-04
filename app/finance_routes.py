@@ -25,15 +25,16 @@ class RecordIn(BaseModel):
 @router.post("/record")
 def record_item(item: RecordIn) -> Dict[str, Any]:
     """
-    Forzamos serialización segura: fecha -> ISO y monto_clp -> int.
-    Evita 'Object of type date is not JSON serializable'.
+    Serialización 100% explícita para evitar 'Object of type date is not JSON serializable'.
+    Construimos el dict manualmente con strings/ints puros.
     """
-    # dict plano desde Pydantic
-    rec = item.model_dump()
-
-    # normalizaciones explícitas
-    rec["fecha"] = item.fecha.isoformat()  # "YYYY-MM-DD"
-    rec["monto_clp"] = int(item.monto_clp) # asegurar int puro
+    rec = {
+        "fecha": item.fecha.isoformat(),   # "YYYY-MM-DD" (str)
+        "concepto": str(item.concepto),
+        "categoria": str(item.categoria),
+        "monto_clp": int(item.monto_clp),
+        "tipo": str(item.tipo),
+    }
 
     print(f"[FINANCE][RECORD] {rec}", flush=True)
 
