@@ -30,9 +30,10 @@ def record_item(item: RecordIn) -> Dict[str, Any]:
     """
     # dict plano desde Pydantic
     rec = item.model_dump()
+
     # normalizaciones explícitas
-    rec["fecha"] = item.fecha.isoformat()          # "YYYY-MM-DD"
-    rec["monto_clp"] = int(item.monto_clp)         # asegurar int puro
+    rec["fecha"] = item.fecha.isoformat()  # "YYYY-MM-DD"
+    rec["monto_clp"] = int(item.monto_clp) # asegurar int puro
 
     print(f"[FINANCE][RECORD] {rec}", flush=True)
 
